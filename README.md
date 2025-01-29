@@ -3,11 +3,11 @@
 ## Índice
 * [Enlaces y Credenciales](#enlaces-y-credenciales)
 * [Repositorios](#repositorios)
-* [Arquitectura de la Solución](#requisitos)
-* [Servicios Desplegados](#procedimiento)
+* [Arquitectura de la Solución](#arquitectura-de-la-solución)
+* [Servicios Desplegados](#servicios-desplegados)
 * [Pipelines](#pipelines)
-* [Procedimiento Lanzar Infraestructura y Servicios](#procedimiento)
-* [Pruebas Consumo Servicio](#procedimiento)
+* [Procedimiento Lanzar Infraestructura y Servicios](#procedimiento-lanzar-infraestructura-y-servicios)
+* [Pruebas Consumo Servicio](#pruebas-consumo-servicio)
 * [Autor](#autor)
 
 
@@ -58,6 +58,7 @@ git clone https://github.com/Lider-Bancolomiba/bancolombia-prueba-ms-usuarios.gi
 
 ## Arquitectura de la Solución
 Con base en el reto planteado se ha diseñado la siguiente arquitectura:
+
 ![Arquitectura](/images/ArquitecturaMicroserviciosAWS.png)
 
 Los componentes y flujo de trabajo se describe a continuación:
@@ -117,6 +118,111 @@ Sin embargo como recomendación se menciona el uso Datadog o Dynatrace, ya que e
 #### 13. Balanceo de CArga
 Amazon Elastic Load Balancer (ALB) es un servicio de balanceo de carga que distribuye el tráfico entrante a múltiples destinos, en nuestro caso, los contenedores en ECS que hemos desplegado, en este caso usamos ALC para acceder y consumir los servicios desplegados en el AWS ECS.
 
+
+
+## Servicios Desplegados
+
+## 1. Microservicio Python Usuarios
+
+Servicio Web de python construido con el framework FastAPI que pertmite definir los Endpoints, el cual interactua con una tabla en DynamoDB del cual consulta e inserta información, para este servicio se crearon 4 operaciones:
+
+- /healt (get) - Permite identificar si el servicio se encuentra operativo.
+- /user (get) - Permite obtener la información de todos los usuarios
+- /users/{user_id} (get) - Permite obtener la información de un usuario por medio delk id.
+- /users (post) - Permite la creación de un nuevo usuario.
+
+
+### 2. BD Dynamo DB
+
+Servicio de base datos que contiene toda la informacón gestionada por medio del servicio usuarios, el cual tiene la siguiente definición:
+
+| Campo    | Tipo     |
+|----------|----------|
+| user_id  | str      |
+| email    | str      |
+| Row 3    | str      |
+
+
+
+
+## Pipelines
+
+### 1. Despliegue Servicios
+
+El pipeline de despliegue de servicios realiza las siguientes tareas:
+
+1. Checkout code
+Clona el repositorio en el entorno de ejecución de Github Actions
+2. Set up AWS credentials
+Configura las credenciales de AWS para permitir la interacción con los servicios de AWS.
+3. Install dependencies
+Instala las dependencias requeridas para realizar las pruebas unitarias
+4. Run unit tests
+Ejecuta las pruebas unitarias y genera un reporte de cobertura de código.
+5. SonarCloud Scan
+Realiza un análisis de calidad de código y cobertura utilizando SonarCloud
+6. Set up Docker Buildx
+Configura Docker Buildx para construir imágenes de Docker
+7. Build Docker image
+Construye la imagen Docker de la aplicación de acuerdo con el Dockefile
+8. Login to Amazon ECR
+Se autentica en AWS ECR
+9. Tag Docker image
+Etiqueta la imagen Docker para su despliegue
+10. Push Docker image to ECR
+Sube la imagen Docker etiquetada a AWS ECR
+11. Update ECS service
+Realiza el despliegue o actualización del servicio ECS para desplegar la nueva versión de la imagen Docker en AWS ECS
+12. Verify ECS Service Status
+Espera a que el servicio se encuentre operativo.
+
+
+### 2. Aprovisionamiento Infraestructrua
+
+El pipeline de despliegue de infraestructura realiza las siguientes tareas:
+
+1. Check out code
+clona el repositorio en entorno de ejecución Github Actions
+2. WS Credentials
+Configura las credenciales de AWS para permitir la interacción con los servicios de AWS
+3. Set up Terraform
+Configura Terraform en el entorno de ejecución Github Actions
+4. Terraform Init
+Inicializa Terraform, descargando los módulos y proveedores necesarios
+5. Terraform Validate
+Valida la configuración de Terraform para asegurarse de que no contiene errores de sintaxis ni de configuración.
+6. Terraform Plan
+Genera y muestra un plan de ejecución de Terraform
+7. Terraform Apply
+Aplica los cambios planificados a la infraestructura de AWS
+
+
+
+## Procedimiento Lanzar Infraestructura y Servicios
+
+### 1. Aprovisionamiento Infraestructura
+1. Ingresar al enlace https://github.com/Lider-Bancolomiba/bancolombia-prueba-infra/actions/runs/13022758955/workflow
+2. Dar Clic en el boton Re-run all jobs
+
+### 2. Despliegue Servicios
+1. Ingresar al enlace https://github.com/Lider-Bancolomiba/bancolombia-prueba-ms-usuarios/actions/runs/13032248250/workflow
+2. Dar Clic en el boton Re-run all jobs
+
+
+## Pruebas Consumo Servicio
+
+El Enspoint donde se ha despledo el servicio es http://ecs-alb-387103903.us-east-1.elb.amazonaws.com/ y ser realizan pruebas por medio de https://reqbin.com/post-online
+
+1. Identificar Salud del Servicio
+
+![SaludServicios](/images/SaludServicio.png)
+
+2. Obtener la Información de Usuarios
+
+![ObtenerUsuarios](/images/ObtenerUsuarios.png)
+
+3. Crear Usuarios
+![CrearUsuarios](/images/CrearUsuarios.png)
 
 ## Autor
 
